@@ -1,0 +1,15 @@
+SKEW_ANALYSIS_START mode=simulate partitions=3 events_per_scenario=300 hot_key_share=0.80
+SCENARIO name=balanced total_events=300 unique_keys=300
+PARTITION scenario=balanced id=0 events=92 unique_keys=92 share=30.67%
+PARTITION scenario=balanced id=1 events=116 unique_keys=116 share=38.67%
+PARTITION scenario=balanced id=2 events=92 unique_keys=92 share=30.67%
+SUMMARY scenario=balanced max_partition=1 max_share=38.67% max_to_mean=1.16
+SCENARIO name=hot_key total_events=300 unique_keys=61
+PARTITION scenario=hot_key id=0 events=258 unique_keys=19 share=86.00%
+PARTITION scenario=hot_key id=1 events=20 unique_keys=20 share=6.67%
+PARTITION scenario=hot_key id=2 events=22 unique_keys=22 share=7.33%
+SUMMARY scenario=hot_key max_partition=0 max_share=86.00% max_to_mean=2.58
+HOT_KEY key=cust-hot-001 events=240 partition=0 share=80.00%
+COMPARISON max_share_delta_pp=47.33
+CONCLUSION more_partitions_distribute_distinct_keys_but_do_not_split_one_hot_key
+SKEW_ANALYSIS_EXIT_CODE=0

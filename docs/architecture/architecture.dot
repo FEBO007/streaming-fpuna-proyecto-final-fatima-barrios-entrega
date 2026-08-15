@@ -1,0 +1,81 @@
+digraph StreamingArchitecture {
+  graph [
+    rankdir=LR,
+    bgcolor="transparent",
+    pad="0.20",
+    nodesep="0.32",
+    ranksep="0.72",
+    splines=ortho,
+    fontname="Arial",
+    fontsize=12,
+    fontcolor="#334E68",
+    labelloc="b",
+    label="Garantía: entrega at-least-once con deduplicación e idempotencia; no se afirma exactly-once de extremo a extremo."
+  ];
+
+  node [
+    shape=plain,
+    fontname="Arial",
+    fontsize=11,
+    fontcolor="#243B53"
+  ];
+
+  edge [
+    color="#486581",
+    penwidth=1.5,
+    arrowsize=0.75,
+    fontname="Arial",
+    fontsize=9,
+    fontcolor="#334E68"
+  ];
+
+  producer [label=<
+    <TABLE BORDER="1" CELLBORDER="0" CELLSPACING="0" CELLPADDING="10" COLOR="#275D8C" BGCOLOR="#F4F7FB">
+      <TR><TD ALIGN="LEFT"><FONT POINT-SIZE="15"><B>Productor sintético</B></FONT></TD></TR>
+      <TR><TD PORT="out" ALIGN="LEFT"><FONT COLOR="#486581">8 eventos reproducibles<BR ALIGN="LEFT"/>caso normal y de velocidad<BR ALIGN="LEFT"/>duplicado, desorden y tardío</FONT></TD></TR>
+    </TABLE>
+  >];
+
+  raw [label=<
+    <TABLE BORDER="1" CELLBORDER="0" CELLSPACING="0" CELLPADDING="10" COLOR="#275D8C" BGCOLOR="#F4F7FB">
+      <TR><TD ALIGN="LEFT"><FONT POINT-SIZE="15"><B>Kafka · entrada</B></FONT></TD></TR>
+      <TR><TD PORT="in" ALIGN="LEFT"><FONT COLOR="#486581">bank.transactions.raw<BR ALIGN="LEFT"/>3 particiones<BR ALIGN="LEFT"/>clave: customer_id</FONT></TD></TR>
+    </TABLE>
+  >];
+
+  beam [label=<
+    <TABLE BORDER="1" CELLBORDER="0" CELLSPACING="0" CELLPADDING="10" COLOR="#275D8C" BGCOLOR="#E8F2FF">
+      <TR><TD ALIGN="LEFT"><FONT POINT-SIZE="15"><B>Pipeline Apache Beam</B></FONT></TD></TR>
+      <TR><TD PORT="main" ALIGN="LEFT"><FONT COLOR="#486581">Ejecución local: DirectRunner<BR ALIGN="LEFT"/>validación y salida lateral<BR ALIGN="LEFT"/>event_time y ventana 60 s / 10 s<BR ALIGN="LEFT"/>deduplicación por evento y ventana<BR ALIGN="LEFT"/>CombinePerKey y reglas</FONT></TD></TR>
+    </TABLE>
+  >];
+
+  alerts [label=<
+    <TABLE BORDER="1" CELLBORDER="0" CELLSPACING="0" CELLPADDING="10" COLOR="#2E7D4F" BGCOLOR="#EAF7EF">
+      <TR><TD PORT="in" ALIGN="LEFT"><FONT POINT-SIZE="15"><B>Alertas</B></FONT></TD></TR>
+      <TR><TD PORT="out" ALIGN="LEFT"><FONT COLOR="#486581">risk.alerts.velocity<BR ALIGN="LEFT"/>clave: idempotency_key<BR ALIGN="LEFT"/>compactación y retención</FONT></TD></TR>
+    </TABLE>
+  >];
+
+  invalid [label=<
+    <TABLE BORDER="1" CELLBORDER="0" CELLSPACING="0" CELLPADDING="10" COLOR="#A74436" BGCOLOR="#FFF2F0">
+      <TR><TD PORT="in" ALIGN="LEFT"><FONT POINT-SIZE="15"><B>Registros inválidos</B></FONT></TD></TR>
+      <TR><TD ALIGN="LEFT"><FONT COLOR="#486581">bank.transactions.invalid<BR ALIGN="LEFT"/>errores de contrato y diagnóstico</FONT></TD></TR>
+    </TABLE>
+  >];
+
+  materializer [label=<
+    <TABLE BORDER="1" CELLBORDER="0" CELLSPACING="0" CELLPADDING="10" COLOR="#6750A4" BGCOLOR="#F5F1FF">
+      <TR><TD PORT="in" ALIGN="LEFT"><FONT POINT-SIZE="15"><B>Materializador SQLite</B></FONT></TD></TR>
+      <TR><TD ALIGN="LEFT"><FONT COLOR="#486581">upsert condicional<BR ALIGN="LEFT"/>mayor revisión por clave<BR ALIGN="LEFT"/>commit del offset después de persistir</FONT></TD></TR>
+    </TABLE>
+  >];
+
+  producer:out:e -> raw:in:w [label="JSON v1.0"];
+  raw:e -> beam:w [label="KafkaIO"];
+  beam:main:e -> alerts:in:w [label="alertas"];
+  alerts:out:e -> materializer:in:w [label="vista durable"];
+  beam:s -> invalid:in:w [label="salida lateral", constraint=false];
+
+  { rank=same; alerts; invalid; }
+}

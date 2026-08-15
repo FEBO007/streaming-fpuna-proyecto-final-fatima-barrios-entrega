@@ -1,0 +1,95 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="1920" height="720" viewBox="0 0 1920 720" role="img" aria-labelledby="title desc">
+  <title id="title">Arquitectura del pipeline de alertas de velocidad transaccional</title>
+  <desc id="desc">Flujo desde un productor sintético hacia Kafka, Apache Beam, tópicos de alertas e inválidos y un materializador SQLite.</desc>
+  <defs>
+    <marker id="arrow" markerWidth="12" markerHeight="12" refX="10" refY="6" orient="auto" markerUnits="strokeWidth">
+      <path d="M0,0 L12,6 L0,12 Z" fill="#486581"/>
+    </marker>
+    <style>
+      .stage { font: 700 19px Arial, sans-serif; letter-spacing: 1.6px; fill: #275D8C; }
+      .title { font: 700 25px Arial, sans-serif; fill: #243B53; }
+      .body { font: 18px Arial, sans-serif; fill: #334E68; }
+      .topic { font: 17px Arial, sans-serif; fill: #334E68; }
+      .edge-label { font: 700 14px Arial, sans-serif; fill: #486581; }
+      .note { font: 18px Arial, sans-serif; fill: #486581; }
+      .box { stroke-width: 3; }
+      .rule { stroke: #CBD5E1; stroke-width: 2; }
+      .edge { fill: none; stroke: #486581; stroke-width: 4; marker-end: url(#arrow); }
+    </style>
+  </defs>
+
+  <rect width="1920" height="720" fill="#FFFFFF"/>
+
+  <text class="stage" x="45" y="72">1 · FUENTE</text>
+  <text class="stage" x="375" y="72">2 · KAFKA</text>
+  <text class="stage" x="705" y="72">3 · APACHE BEAM</text>
+  <text class="stage" x="1195" y="72">4 · SALIDAS</text>
+  <text class="stage" x="1575" y="72">5 · PERSISTENCIA</text>
+
+  <rect class="box" x="40" y="105" width="270" height="330" rx="20" fill="#F4F7FB" stroke="#275D8C"/>
+  <text class="title" x="67" y="160">Productor sintético</text>
+  <line class="rule" x1="67" y1="184" x2="283" y2="184"/>
+  <text class="body" x="67" y="235">8 eventos reproducibles</text>
+  <text class="body" x="67" y="283">caso normal y velocidad</text>
+  <text class="body" x="67" y="331">duplicado y desorden</text>
+  <text class="body" x="67" y="379">candidato tardío</text>
+
+  <rect class="box" x="370" y="105" width="270" height="330" rx="20" fill="#F4F7FB" stroke="#275D8C"/>
+  <text class="title" x="397" y="160">Transacciones crudas</text>
+  <line class="rule" x1="397" y1="184" x2="613" y2="184"/>
+  <text class="topic" x="397" y="235">bank.transactions.raw</text>
+  <text class="body" x="397" y="283">3 particiones</text>
+  <text class="body" x="397" y="331">clave: customer_id</text>
+  <text class="body" x="397" y="379">retención: 7 días</text>
+
+  <rect class="box" x="700" y="105" width="400" height="505" rx="20" fill="#E8F2FF" stroke="#275D8C"/>
+  <text class="title" x="732" y="160">Pipeline Apache Beam</text>
+  <text class="body" x="732" y="200">Ejecución local: DirectRunner</text>
+  <line class="rule" x1="732" y1="226" x2="1068" y2="226"/>
+  <text class="body" x="732" y="277">Validación y salida lateral</text>
+  <text class="body" x="732" y="325">Timestamp desde event_time</text>
+  <text class="body" x="732" y="373">Ventana deslizante 60 s / 10 s</text>
+  <text class="body" x="732" y="421">Deduplicación por evento y ventana</text>
+  <text class="body" x="732" y="469">CombinePerKey y reglas</text>
+  <text class="body" x="732" y="517">Panes acumulativos</text>
+
+  <rect class="box" x="1190" y="105" width="300" height="235" rx="20" fill="#EAF7EF" stroke="#2E7D4F"/>
+  <text class="title" x="1220" y="160">Alertas</text>
+  <line class="rule" x1="1220" y1="184" x2="1460" y2="184"/>
+  <text class="topic" x="1220" y="232">risk.alerts.velocity</text>
+  <text class="body" x="1220" y="278">clave: idempotency_key</text>
+  <text class="body" x="1220" y="316">compactación y retención</text>
+
+  <rect class="box" x="1190" y="405" width="300" height="205" rx="20" fill="#FFF2F0" stroke="#A74436"/>
+  <text class="title" x="1220" y="460">Registros inválidos</text>
+  <line class="rule" x1="1220" y1="484" x2="1460" y2="484"/>
+  <text class="topic" x="1220" y="532">bank.transactions.invalid</text>
+  <text class="body" x="1220" y="576">errores de contrato</text>
+
+  <rect class="box" x="1570" y="105" width="300" height="235" rx="20" fill="#F5F1FF" stroke="#6750A4"/>
+  <text class="title" x="1600" y="160">Materializador</text>
+  <text class="body" x="1600" y="200">SQLite</text>
+  <line class="rule" x1="1600" y1="226" x2="1840" y2="226"/>
+  <text class="body" x="1600" y="274">upsert condicional</text>
+  <text class="body" x="1600" y="316">mayor revisión por clave</text>
+
+  <path class="edge" d="M310 270 H370"/>
+  <text class="edge-label" x="320" y="250">JSON</text>
+
+  <path class="edge" d="M640 270 H700"/>
+  <text class="edge-label" x="646" y="250">KafkaIO</text>
+
+  <path class="edge" d="M1100 222 H1190"/>
+  <text class="edge-label" x="1120" y="202">alertas</text>
+
+  <path class="edge" d="M1100 455 H1145 V507 H1190"/>
+  <text class="edge-label" x="1112" y="487">inválidos</text>
+
+  <path class="edge" d="M1490 222 H1570"/>
+  <text class="edge-label" x="1510" y="202">vista</text>
+
+  <rect x="40" y="630" width="1830" height="70" rx="16" fill="#F8FAFC" stroke="#CBD5E1" stroke-width="2"/>
+  <text class="note" x="70" y="661">Garantía declarada: entrega at-least-once con deduplicación e idempotencia.</text>
+  <text class="note" x="70" y="687">No se afirma exactly-once de extremo a extremo entre Kafka y SQLite.</text>
+</svg>

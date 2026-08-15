@@ -1,0 +1,5 @@
+888c179a3715fc7c93fcc43da80dcfaae58810f2cbe16864e9eda98c763513e8  01-verificacion-proyecto-final.log
+ad128689e40f5af30ad1d9bf173c29f71dd0de55a95e2a7c1249e97aff2134f1  21-alertas-directrunner-final-20260809-190216.log
+a77a977ee6bd5fefb5e28f5c42b5c7f03d90458634148a176402a7136953aab1  22-resumen-validacion-final.md
+6c221eaa5112874e86e71bce944469303a4ee22874226a517b8d8a2141ebd29d  23-analisis-skew-offline.log
+751e9ecbb9c094c7e153c2af514c39d0cec599c4696e2e2ee39e7bf39e6ba25b  README.md

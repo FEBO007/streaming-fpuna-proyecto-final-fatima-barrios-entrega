@@ -1,0 +1,23 @@
+PROJECT_VERIFICATION_REFERENCE
+==============================
+
+Fecha: 2026-08-15
+Python: 3.14.6
+
+pytest -q
+--------
+71 passed
+
+ruff check .
+------------
+All checks passed!
+
+ruff format --check .
+---------------------
+31 files already formatted
+
+docker compose config --quiet
+-----------------------------
+COMPOSE_CONFIG=VALID
+
+VERIFICATION_EXIT_CODE=0
